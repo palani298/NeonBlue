@@ -45,3 +45,21 @@ class BatchEventResponse(BaseModel):
     failed: int
     events: List[EventResponse]
     errors: List[Dict[str, Any]]
+
+
+class EventUpdate(BaseModel):
+    """Schema for updating an event."""
+    
+    event_type: Optional[str] = Field(default=None, min_length=1, max_length=50)
+    properties: Optional[Dict[str, Any]] = None
+    session_id: Optional[str] = Field(default=None, max_length=255)
+    request_id: Optional[str] = Field(default=None, max_length=255)
+
+
+class EventListResponse(BaseModel):
+    """Schema for event list response."""
+    
+    events: List[EventResponse]
+    total: int
+    page: int
+    page_size: int

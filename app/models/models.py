@@ -127,7 +127,7 @@ class Assignment(Base, TimestampMixin):
         ForeignKey("experiments.id", ondelete="CASCADE"),
         nullable=False
     )
-    user_id = Column(String(255), nullable=False)
+    user_id = Column(String(255), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     variant_id = Column(
         BigInteger,
         ForeignKey("variants.id", ondelete="CASCADE"),
@@ -160,6 +160,7 @@ class Assignment(Base, TimestampMixin):
     # Relationships
     experiment = relationship("Experiment", back_populates="assignments")
     variant = relationship("Variant", back_populates="assignments")
+    user = relationship("User", back_populates="assignments")
     
     # Constraints and indexes
     __table_args__ = (
@@ -176,12 +177,11 @@ class Event(Base):
     
     __tablename__ = "events"
     __table_args__ = (
-        # Define partitioning
-        {"postgresql_partition_by": "RANGE (timestamp)"},
         Index("idx_events_experiment_time", "experiment_id", "timestamp"),
         Index("idx_events_user_time", "user_id", "timestamp"),
         Index("idx_events_type_time", "event_type", "timestamp"),
         Index("idx_events_properties", "properties", postgresql_using="gin"),
+        {"postgresql_partition_by": "RANGE (timestamp)"},
     )
     
     id = Column(
@@ -193,7 +193,7 @@ class Event(Base):
     
     # Core fields
     experiment_id = Column(BigInteger, nullable=False)
-    user_id = Column(String(255), nullable=False)
+    user_id = Column(String(255), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     variant_id = Column(BigInteger, nullable=True)
     event_type = Column(String(50), nullable=False)
     
@@ -215,6 +215,9 @@ class Event(Base):
     # Metadata
     session_id = Column(String(255), nullable=True)
     request_id = Column(String(255), nullable=True)
+    
+    # Relationships
+    user = relationship("User", back_populates="events")
 
 
 class OutboxEvent(Base):
@@ -251,6 +254,27 @@ class OutboxEvent(Base):
     __table_args__ = (
         Index("idx_outbox_unprocessed", "processed_at", "created_at"),
         Index("idx_outbox_aggregate", "aggregate_type", "aggregate_id"),
+    )
+
+
+class User(Base, TimestampMixin):
+    """User model for user management."""
+    
+    __tablename__ = "users"
+    
+    user_id = Column(String(255), primary_key=True, nullable=False, index=True)
+    email = Column(String(255), nullable=True, unique=True, index=True)
+    name = Column(String(255), nullable=True)
+    properties = Column(JSONB, default={}, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    
+    # Relationships
+    assignments = relationship("Assignment", back_populates="user")
+    events = relationship("Event", back_populates="user")
+    
+    __table_args__ = (
+        Index("idx_user_active", "is_active"),
+        Index("idx_user_email", "email"),
     )
 
 

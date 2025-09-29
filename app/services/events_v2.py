@@ -22,7 +22,10 @@ class EventServiceV2:
         user_id: str,
         event_type: str,
         properties: Optional[Dict] = None,
-        value: Optional[float] = None
+        value: Optional[float] = None,
+        timestamp: Optional[datetime] = None,
+        session_id: Optional[str] = None,
+        request_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Record a single event using stored procedure.
@@ -39,6 +42,9 @@ class EventServiceV2:
             event_type: Type of event
             properties: Event properties
             value: Numeric value (for revenue events)
+            timestamp: Event timestamp (defaults to now)
+            session_id: Session ID for tracking
+            request_id: Request ID for tracking
         """
         try:
             # Record event using stored procedure
@@ -55,22 +61,21 @@ class EventServiceV2:
             await db.commit()
             
             # Update metrics
-            metrics.event_counter.labels(
-                experiment_id=str(experiment_id),
-                event_type=event_type,
-                variant=result["variant_key"]
-            ).inc()
+            metrics.record_event(
+                experiment_id=experiment_id,
+                event_type=event_type
+            )
             
-            # Return formatted response
+            # Return formatted response matching EventResponse schema
             return {
-                "id": result["id"],
+                "id": str(result["id"]),  # Convert UUID to string
                 "experiment_id": experiment_id,
                 "user_id": user_id,
                 "event_type": event_type,
-                "variant_key": result["variant_key"],
-                "properties": properties,
-                "value": value,
-                "created_at": result["created_at"].isoformat() if result["created_at"] else None
+                "variant_id": result["variant_id"],
+                "variant_key": "unknown",  # We don't have variant_key from stored procedure
+                "timestamp": result["timestamp"],
+                "status": result["status"]
             }
             
         except Exception as e:

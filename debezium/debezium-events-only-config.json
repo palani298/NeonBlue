@@ -1,0 +1,32 @@
+{
+  "name": "experiments-events-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "experiments",
+    "database.password": "password",
+    "database.dbname": "experiments",
+    "database.server.name": "experiments",
+    "topic.prefix": "experiments",
+    "table.include.list": "public.events,public.assignments",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_events",
+    "publication.name": "debezium_events_publication",
+    "publication.autocreate.mode": "filtered",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false",
+    "transforms": "route",
+    "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.route.regex": "experiments.public.(.*)",
+    "transforms.route.replacement": "experiments_$1",
+    "snapshot.mode": "initial",
+    "snapshot.locking.mode": "minimal",
+    "max.batch.size": "2048",
+    "max.queue.size": "8192",
+    "poll.interval.ms": "1000"
+  }
+}

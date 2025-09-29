@@ -3,14 +3,16 @@ version: '3.8'
 services:
   # FastAPI Application
   api:
-    build: .
+    build:
+      context: ..
+      dockerfile: config/Dockerfile
     container_name: experiments-api
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://experiments:password@postgres:5432/experiments
       REDIS_URL: redis://redis:6379/0
-      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_HOST: experiments-clickhouse
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       DEBUG: ${DEBUG:-false}
@@ -23,8 +25,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    volumes:
-      - ./app:/app
+    # volumes:
+      # - ../app:/app  # Commented out to fix module import error
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - experiments-network
@@ -43,6 +45,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init/postgres:/docker-entrypoint-initdb.d
+    command: >
+      postgres
+      -c wal_level=logical
+      -c max_replication_slots=4
+      -c max_wal_senders=4
+      -c shared_preload_libraries=pg_stat_statements
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U experiments -d experiments"]
       interval: 10s
@@ -180,7 +188,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'

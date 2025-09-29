@@ -52,9 +52,8 @@ class AssignmentServiceV2:
                 # Handle enrollment if needed and not already enrolled
                 if enroll and not cached.get("enrolled_at"):
                     # Need to update enrollment in DB
-                    variant_key = cached["variant_key"]
                     assignment = await stored_procedure_dao.get_or_create_assignment(
-                        db, experiment_id, user_id, variant_key, enroll=True
+                        db, experiment_id, user_id, enroll=True
                     )
                     
                     # Update cache with enrollment
@@ -66,7 +65,7 @@ class AssignmentServiceV2:
         
         # 2. Get experiment to check if active
         experiment = await self._get_experiment(db, experiment_id)
-        if not experiment or experiment["status"] != "active":
+        if not experiment or experiment["status"].lower() != "active":
             logger.warning(f"Experiment {experiment_id} not found or not active")
             return None
         
@@ -76,13 +75,23 @@ class AssignmentServiceV2:
             logger.error(f"Failed to calculate variant for user {user_id} in experiment {experiment_id}")
             return None
         
-        # 4. Get or create assignment using stored procedure
+        # 4. Check if user exists first
+        user_exists = await self._check_user_exists(db, user_id)
+        if not user_exists:
+            logger.warning(f"User {user_id} does not exist")
+            return None
+        
+        # 5. Get or create assignment using stored procedure
         try:
             assignment = await stored_procedure_dao.get_or_create_assignment(
-                db, experiment_id, user_id, variant_key, enroll
+                db, experiment_id, user_id, enroll
             )
             
             # Format response
+            # Find the variant to get is_control
+            variant = next((v for v in experiment["variants"] if v["id"] == assignment["variant_id"]), None)
+            is_control = variant["is_control"] if variant else False
+            
             result = {
                 "experiment_id": experiment_id,
                 "experiment_key": experiment["key"],
@@ -90,10 +99,11 @@ class AssignmentServiceV2:
                 "variant_id": assignment["variant_id"],
                 "variant_key": assignment["variant_key"],
                 "variant_name": assignment["variant_name"],
-                "enrolled": assignment["enrolled_at"] is not None,
+                "is_control": is_control,
+                "assigned_at": assignment["created_at"].isoformat() if assignment["created_at"] else None,
                 "enrolled_at": assignment["enrolled_at"].isoformat() if assignment["enrolled_at"] else None,
-                "created_at": assignment["created_at"].isoformat() if assignment["created_at"] else None,
-                "version": experiment["version"]
+                "version": experiment["version"],
+                "source": "api"
             }
             
             # Cache the result
@@ -177,7 +187,7 @@ class AssignmentServiceV2:
             
             for exp_id in new_experiment_ids:
                 experiment = await self._get_experiment(db, exp_id)
-                if experiment and experiment["status"] == "active":
+                if experiment and experiment["status"].lower() == "active":
                     variant_key = self._calculate_variant_key(experiment, user_id)
                     
                     if variant_key:
@@ -237,6 +247,23 @@ class AssignmentServiceV2:
     ) -> Optional[Dict[str, Any]]:
         """Get experiment with variants using stored procedure."""
         return await stored_procedure_dao.get_experiment_with_variants(db, experiment_id)
+    
+    async def _check_user_exists(
+        self,
+        db: AsyncSession,
+        user_id: str
+    ) -> bool:
+        """Check if user exists in the database."""
+        try:
+            from sqlalchemy import text
+            result = await db.execute(
+                text("SELECT 1 FROM users WHERE user_id = :user_id LIMIT 1"),
+                {"user_id": user_id}
+            )
+            return result.fetchone() is not None
+        except Exception as e:
+            logger.error(f"Error checking user existence: {e}")
+            return False
     
     def _calculate_variant_key(
         self,

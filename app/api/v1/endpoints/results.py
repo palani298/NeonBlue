@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.middleware.auth import auth
-from app.services.analytics import analytics_service
+from app.services.analytics_v2 import analytics_service_v2 as analytics_service
 
 logger = logging.getLogger(__name__)
 

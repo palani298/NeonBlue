@@ -84,20 +84,46 @@ class StoredProcedureDAO:
                 text("SELECT * FROM get_experiment_with_variants(:experiment_id)"),
                 {"experiment_id": experiment_id}
             )
-            row = result.fetchone()
+            rows = result.fetchall()
             
-            if row:
-                return {
-                    "id": row.experiment_id,
-                    "key": row.experiment_key,
-                    "name": row.experiment_name,
-                    "status": row.experiment_status,
-                    "version": row.experiment_version,
-                    "starts_at": row.starts_at,
-                    "ends_at": row.ends_at,
-                    "variants": row.variants
-                }
-            return None
+            if not rows:
+                return None
+            
+            # Group rows by experiment (all rows have same experiment data)
+            first_row = rows[0]
+            experiment = {
+                "id": first_row.id,
+                "key": first_row.key,
+                "name": first_row.name,
+                "description": first_row.description,
+                "status": first_row.status.value if hasattr(first_row.status, 'value') else str(first_row.status),
+                "seed": first_row.seed,
+                "version": first_row.version,
+                "config": first_row.config,
+                "starts_at": first_row.starts_at,
+                "ends_at": first_row.ends_at,
+                "created_at": first_row.created_at,
+                "updated_at": first_row.updated_at,
+                "variants": []
+            }
+            
+            # Add variants
+            for row in rows:
+                if row.variant_id:  # Only add rows that have variant data
+                    variant = {
+                        "id": row.variant_id,
+                        "key": row.variant_key,
+                        "name": row.variant_name,
+                        "description": row.variant_description,
+                        "allocation_pct": row.variant_allocation_pct,
+                        "is_control": row.variant_is_control,
+                        "config": row.variant_config,
+                        "created_at": row.variant_created_at,
+                        "updated_at": row.variant_updated_at
+                    }
+                    experiment["variants"].append(variant)
+            
+            return experiment
             
         except Exception as e:
             logger.error(f"Error getting experiment: {e}")
@@ -161,11 +187,46 @@ class StoredProcedureDAO:
     # =====================================================
     
     @staticmethod
+    async def get_assignment(
+        db: AsyncSession,
+        experiment_id: int,
+        user_id: str,
+        enroll: bool = False
+    ) -> Optional[Dict[str, Any]]:
+        """Get or create assignment using stored procedure."""
+        try:
+            result = await db.execute(
+                text("SELECT * FROM get_or_create_assignment(:experiment_id, :user_id, :enroll)"),
+                {
+                    "experiment_id": experiment_id,
+                    "user_id": user_id,
+                    "enroll": enroll
+                }
+            )
+            
+            row = result.fetchone()
+            if row:
+                return {
+                    "assignment_id": row.assignment_id,
+                    "experiment_id": row.experiment_id,
+                    "user_id": row.user_id,
+                    "variant_id": row.variant_id,
+                    "variant_key": row.variant_key,
+                    "variant_name": row.variant_name,
+                    "enrolled_at": row.enrolled_at,
+                    "created_at": row.created_at
+                }
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting assignment: {e}")
+            raise
+    
+    @staticmethod
     async def get_or_create_assignment(
         db: AsyncSession,
         experiment_id: int,
         user_id: str,
-        variant_key: str,
         enroll: bool = False
     ) -> Dict[str, Any]:
         """Get or create assignment using stored procedure."""
@@ -173,13 +234,12 @@ class StoredProcedureDAO:
             result = await db.execute(
                 text("""
                     SELECT * FROM get_or_create_assignment(
-                        :experiment_id, :user_id, :variant_key, :enroll
+                        :experiment_id, :user_id, :enroll
                     )
                 """),
                 {
                     "experiment_id": experiment_id,
                     "user_id": user_id,
-                    "variant_key": variant_key,
                     "enroll": enroll
                 }
             )
@@ -194,8 +254,7 @@ class StoredProcedureDAO:
                     "variant_key": row.variant_key,
                     "variant_name": row.variant_name,
                     "enrolled_at": row.enrolled_at,
-                    "created_at": row.created_at,
-                    "is_new": row.is_new
+                    "created_at": row.created_at
                 }
             raise DatabaseError("Failed to get/create assignment")
             
@@ -256,7 +315,7 @@ class StoredProcedureDAO:
                 text("""
                     SELECT * FROM record_event(
                         :experiment_id, :user_id, :event_type, 
-                        :properties::jsonb, :value
+                        :properties, :value
                     )
                 """),
                 {
@@ -272,9 +331,12 @@ class StoredProcedureDAO:
             if row:
                 return {
                     "id": row.event_id,
-                    "assignment_id": row.assignment_id,
-                    "variant_key": row.variant_key,
-                    "created_at": row.created_at
+                    "experiment_id": row.experiment_id,
+                    "user_id": row.user_id,
+                    "variant_id": row.variant_id,
+                    "event_type": row.event_type,
+                    "timestamp": row.event_timestamp,
+                    "status": row.status
                 }
             raise DatabaseError("Failed to record event")
             

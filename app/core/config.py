@@ -38,8 +38,8 @@ class Settings(BaseSettings):
     
     # ClickHouse (for analytics)
     clickhouse_host: str = Field(default="localhost", env="CLICKHOUSE_HOST")
-    clickhouse_port: int = Field(default=9000, env="CLICKHOUSE_PORT")
-    clickhouse_database: str = Field(default="experiments", env="CLICKHOUSE_DATABASE")
+    clickhouse_port: int = Field(default=8123, env="CLICKHOUSE_PORT")
+    clickhouse_database: str = Field(default="experiments_analytics", env="CLICKHOUSE_DATABASE")
     clickhouse_user: str = Field(default="default", env="CLICKHOUSE_USER")
     clickhouse_password: str = Field(default="", env="CLICKHOUSE_PASSWORD")
     
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     
     # CORS
     cors_origins: List[str] = Field(
-        default_factory=lambda: ["http://localhost:3000"],
+        default_factory=lambda: ["http://localhost:3000", "http://localhost:3001"],
         env="CORS_ORIGINS"
     )
     

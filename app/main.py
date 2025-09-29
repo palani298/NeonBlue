@@ -67,6 +67,12 @@ app.add_middleware(RateLimitMiddleware)
 app.include_router(api_router, prefix=settings.api_prefix)
 
 
+@app.get("/")
+async def root():
+    """Root endpoint - redirects to API docs."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/api/v1/docs")
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
@@ -78,6 +84,18 @@ async def readiness_check():
     """Readiness check endpoint."""
     # TODO: Check database and Redis connectivity
     return {"status": "ready"}
+
+
+@app.get("/metrics")
+async def metrics_endpoint():
+    """Prometheus metrics endpoint."""
+    from fastapi.responses import Response
+    from app.core.metrics import metrics
+    if metrics:
+        metrics_data = metrics.get_metrics()
+        return Response(content=metrics_data, media_type="text/plain")
+    else:
+        return Response(content="Prometheus metrics not available", media_type="text/plain")
 
 
 @app.exception_handler(Exception)

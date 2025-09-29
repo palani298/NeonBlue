@@ -21,7 +21,10 @@ def upgrade():
     """Create all stored procedures."""
     
     # Read the stored procedures SQL file
-    with open('/workspace/init/postgres/02_stored_procedures.sql', 'r') as f:
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    sql_file = os.path.join(current_dir, '..', '..', 'init', 'postgres', '02_stored_procedures.sql')
+    with open(sql_file, 'r') as f:
         sql_content = f.read()
     
     # Execute the SQL to create stored procedures

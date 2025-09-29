@@ -12,9 +12,12 @@ from app.middleware.auth import auth
 from app.schemas.experiments import (
     ExperimentCreate,
     ExperimentResponse,
-    ExperimentUpdate
+    ExperimentUpdate,
+    BulkExperimentCreate,
+    BulkExperimentResponse
 )
 from app.models.models import Experiment, Variant, ExperimentStatus
+from app.services.bulk_operations import bulk_operations_service
 
 logger = logging.getLogger(__name__)
 
@@ -234,3 +237,79 @@ async def pause_experiment(
     logger.info(f"Paused experiment {experiment.key}")
     
     return experiment
+
+
+@router.delete("/{experiment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_experiment(
+    experiment_id: int,
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.verify_token)
+):
+    """Delete an experiment and all its data."""
+    result = await db.execute(
+        select(Experiment).where(Experiment.id == experiment_id)
+    )
+    experiment = result.scalar_one_or_none()
+    
+    if not experiment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Experiment {experiment_id} not found"
+        )
+    
+    # Soft delete by setting status to archived
+    experiment.status = ExperimentStatus.ARCHIVED
+    
+    await db.commit()
+    
+    logger.info(f"Archived experiment {experiment.key}")
+    
+    return None
+
+
+@router.delete("/{experiment_id}/hard", status_code=status.HTTP_204_NO_CONTENT)
+async def hard_delete_experiment(
+    experiment_id: int,
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.verify_token)
+):
+    """Hard delete an experiment and all its data (permanent)."""
+    result = await db.execute(
+        select(Experiment).where(Experiment.id == experiment_id)
+    )
+    experiment = result.scalar_one_or_none()
+    
+    if not experiment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Experiment {experiment_id} not found"
+        )
+    
+    # Hard delete - this will cascade to variants, assignments, etc.
+    await db.delete(experiment)
+    await db.commit()
+    
+    logger.info(f"Hard deleted experiment {experiment.key}")
+    
+    return None
+
+
+@router.post("/bulk", response_model=BulkExperimentResponse, status_code=status.HTTP_201_CREATED)
+async def create_bulk_experiments(
+    bulk_data: BulkExperimentCreate,
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.verify_token)
+):
+    """Create multiple experiments using true bulk operations."""
+    # Convert Pydantic models to dictionaries
+    experiments_data = [exp.dict() for exp in bulk_data.experiments]
+    
+    # Use bulk operations service
+    result = await bulk_operations_service.create_bulk_experiments(db, experiments_data)
+    
+    return BulkExperimentResponse(
+        created=result["created"],
+        failed=result["failed"],
+        total_created=len(result["created"]),
+        total_failed=len(result["failed"])
+    )

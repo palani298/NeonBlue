@@ -29,19 +29,25 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Create non-root user first
+RUN useradd -m -u 1000 appuser
+
+# Copy Python dependencies from builder to user directory
+COPY --from=builder /root/.local /home/appuser/.local
 
 # Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PYTHONPATH=/app
 
 # Copy application code
-COPY ./app /app/app
-COPY ./alembic.ini /app/
-COPY ./alembic /app/alembic
+COPY app /app/app
+COPY alembic.ini /app/
+COPY alembic /app/alembic
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Set ownership
+RUN chown -R appuser:appuser /app /home/appuser/.local
+
+# Switch to non-root user
 USER appuser
 
 # Expose port

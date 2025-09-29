@@ -105,3 +105,37 @@ class ExperimentUpdate(BaseModel):
     starts_at: Optional[datetime] = None
     ends_at: Optional[datetime] = None
     config: Optional[Dict[str, Any]] = None
+
+
+class VariantUpdate(BaseModel):
+    """Schema for updating a variant."""
+    
+    name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    allocation_pct: Optional[int] = Field(default=None, ge=0, le=100)
+    is_control: Optional[bool] = None
+    config: Optional[Dict[str, Any]] = None
+
+
+class ExperimentListResponse(BaseModel):
+    """Schema for experiment list response."""
+    
+    experiments: List[ExperimentResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class BulkExperimentCreate(BaseModel):
+    """Schema for creating multiple experiments."""
+    
+    experiments: List[ExperimentCreate] = Field(..., min_length=1, max_length=100)
+
+
+class BulkExperimentResponse(BaseModel):
+    """Schema for bulk experiment creation response."""
+    
+    created: List[ExperimentResponse]
+    failed: List[Dict[str, Any]]
+    total_created: int
+    total_failed: int

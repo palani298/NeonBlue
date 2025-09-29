@@ -1,7 +1,8 @@
 """Event endpoints."""
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -9,10 +10,13 @@ from app.middleware.auth import auth
 from app.schemas.events import (
     EventCreate,
     EventResponse,
+    EventUpdate,
     BatchEventCreate,
     BatchEventResponse
 )
-from app.services.events import event_service, outbox_processor
+from app.services.events_v2 import event_service_v2 as event_service
+from app.services.events import outbox_processor
+from app.services.bulk_operations import bulk_operations_service
 
 logger = logging.getLogger(__name__)
 
@@ -70,18 +74,23 @@ async def record_batch_events(
     token_data: dict = Depends(auth.verify_token)
 ):
     """
-    Record multiple events in a batch.
+    Record multiple events using true bulk operations.
     
     Useful for reducing API calls when tracking multiple events.
     """
     try:
         events_data = [event.model_dump() for event in batch_data.events]
-        result = await event_service.record_batch_events(db, events_data)
+        result = await bulk_operations_service.record_bulk_events(db, events_data)
         
         # Process outbox in background
         background_tasks.add_task(process_outbox_background, db)
         
-        return result
+        return BatchEventResponse(
+            recorded=result["recorded"],
+            failed=result["failed"],
+            total=len(batch_data.events),
+            events=result["events"]
+        )
         
     except Exception as e:
         logger.error(f"Failed to record batch events: {e}")
@@ -89,6 +98,123 @@ async def record_batch_events(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to record batch events"
         )
+
+
+@router.get("/{event_id}", response_model=EventResponse)
+async def get_event(
+    event_id: str,
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.verify_token)
+):
+    """Get event by ID."""
+    from app.models.models import Event
+    from sqlalchemy import select
+    
+    result = await db.execute(
+        select(Event).where(Event.id == event_id)
+    )
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event {event_id} not found"
+        )
+    
+    return event
+
+
+@router.get("/", response_model=List[EventResponse])
+async def list_events(
+    experiment_id: Optional[int] = Query(default=None),
+    user_id: Optional[str] = Query(default=None),
+    event_type: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, le=1000),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.verify_token)
+):
+    """List events with optional filtering."""
+    from app.models.models import Event
+    from sqlalchemy import select
+    
+    query = select(Event).limit(limit).offset(offset)
+    
+    if experiment_id:
+        query = query.where(Event.experiment_id == experiment_id)
+    if user_id:
+        query = query.where(Event.user_id == user_id)
+    if event_type:
+        query = query.where(Event.event_type == event_type)
+    
+    result = await db.execute(query.order_by(Event.timestamp.desc()))
+    events = result.scalars().all()
+    
+    return events
+
+
+@router.patch("/{event_id}", response_model=EventResponse)
+async def update_event(
+    event_id: str,
+    update_data: EventUpdate,
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.verify_token)
+):
+    """Update event details."""
+    from app.models.models import Event
+    from sqlalchemy import select
+    
+    result = await db.execute(
+        select(Event).where(Event.id == event_id)
+    )
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event {event_id} not found"
+        )
+    
+    # Update fields
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for field, value in update_dict.items():
+        setattr(event, field, value)
+    
+    await db.commit()
+    await db.refresh(event)
+    
+    logger.info(f"Updated event {event_id}")
+    
+    return event
+
+
+@router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_event(
+    event_id: str,
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.verify_token)
+):
+    """Delete an event."""
+    from app.models.models import Event
+    from sqlalchemy import select
+    
+    result = await db.execute(
+        select(Event).where(Event.id == event_id)
+    )
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event {event_id} not found"
+        )
+    
+    await db.delete(event)
+    await db.commit()
+    
+    logger.info(f"Deleted event {event_id}")
+    
+    return None
 
 
 async def process_outbox_background(db: AsyncSession):
