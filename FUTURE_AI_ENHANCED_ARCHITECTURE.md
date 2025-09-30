@@ -1,554 +1,514 @@
-# 🤖 Future AI-Enhanced Architecture: Kafka → MCP → ChromaDB
+# 🤖 Future AI-Enhanced Architecture: Kafka → MCP Router → Specialized MCP Servers
 
-## 🎯 **Vision: Intelligent Experimentation Platform**
+## 🎯 **Vision: Kafka-First Intelligent Experimentation Platform**
 
-The next evolution of NeonBlue will integrate **AI-powered insights, contextual search, and intelligent experiment optimization** using Kafka streaming, Model Context Protocol (MCP), and ChromaDB for semantic search capabilities.
+The next evolution of NeonBlue implements a **Kafka-first architecture** with specialized MCP servers for different databases, enabling real-time AI processing, intelligent routing, and semantic search across PostgreSQL, ClickHouse, and ChromaDB.
 
 ---
 
-## 🚀 **Future Architecture Overview**
+## 🚀 **Architecture Overview: Kafka → MCP Router → Specialized Servers**
 
 ### **AI-Enhanced Data Flow**
 ```
 Current Flow: PostgreSQL → CDC → Kafka → ClickHouse → Dashboards
                                     │
                                     ▼ (Enhanced)
-Future Flow:  PostgreSQL → CDC → Kafka → AI Processing Pipeline
+Future Flow:  PostgreSQL → CDC → Kafka → MCP Router → Specialized MCP Servers
                                     │         │
                                     │         ▼
-                                    │    ┌─────────────────┐
-                                    │    │ MCP Servers     │
-                                    │    │ • Experiment AI │
-                                    │    │ • User Behavior │
-                                    │    │ • Optimization  │
-                                    │    └─────────────────┘
+                                    │    ┌─────────────────────────────┐
+                                    │    │ MCP Router                  │
+                                    │    │ • Data Classification       │
+                                    │    │ • Intelligent Routing       │
+                                    │    │ • Context Extraction        │
+                                    │    └─────────────────────────────┘
                                     │         │
                                     │         ▼
-                                    │    ┌─────────────────┐
-                                    │    │ ChromaDB        │
-                                    │    │ Vector Store    │
-                                    │    │ Semantic Search │
-                                    │    └─────────────────┘
+                                    │    ┌─────────────────────────────┐
+                                    │    │ Specialized MCP Servers     │
+                                    │    │ • PostgreSQL MCP Server     │
+                                    │    │ • ClickHouse MCP Server     │
+                                    │    │ • ChromaDB MCP Server       │
+                                    │    │ • Experiment Intelligence   │
+                                    │    └─────────────────────────────┘
                                     │         │
                                     ▼         ▼
                             ┌─────────────────────────────┐
                             │ AI-Enhanced Analytics       │
-                            │ • Predictive Insights       │
-                            │ • Contextual Recommendations│
-                            │ • Intelligent Optimization  │
+                            │ • Real-time Processing      │
+                            │ • Semantic Search           │
+                            │ • Intelligent Insights      │
+                            │ • Predictive Optimization   │
                             └─────────────────────────────┘
 ```
 
 ---
 
-## 🔧 **Phase 1: Real-time AI Event Processing**
+## 🔧 **Phase 1: Kafka-First Stream Processing**
 
-### **Kafka Stream Processing Enhancement**
+### **Enhanced Kafka Stream Processing**
 ```python
-# Kafka Streams for AI Processing
-@kafka_processor(topic="experiments_events")
-async def ai_event_processor(event_data):
+# stream_processor/main.py
+@kafka_consumer(topics=["experiments_events", "user_events", "analytics_events"])
+async def kafka_stream_processor(event_data):
     """
-    Enhanced event processing with AI context extraction
+    Kafka-first processing with intelligent data classification and routing
     """
-    # 1. Real-time Feature Extraction
-    features = extract_behavioral_features(event_data)
+    # 1. Extract context and classify data type
+    data_classification = await classify_event_data(event_data)
     
-    # 2. Context Vector Generation
-    context_vector = await generate_context_embedding(event_data)
+    # 2. Generate embeddings for semantic processing
+    embeddings = await generate_context_embeddings(event_data)
     
-    # 3. Send to AI Pipeline
-    await send_to_mcp_server(features, context_vector)
+    # 3. Route to appropriate MCP server based on data type
+    routing_decision = await route_to_mcp_server(
+        data_type=data_classification.type,
+        context=embeddings,
+        priority=data_classification.priority
+    )
     
-    # 4. Store in Vector Database
-    await store_in_chromadb(event_data, context_vector)
+    # 4. Send to MCP Router for intelligent processing
+    await send_to_mcp_router(event_data, routing_decision, embeddings)
+    
+    # 5. Store raw event for audit and replay
+    await store_raw_event(event_data, data_classification)
 ```
 
-### **AI-Enhanced Event Schema**
+### **Data Classification Engine**
+```python
+# mcp_router/data_classifier.py
+class IntelligentDataClassifier:
+    """
+    AI-powered data classification for intelligent routing
+    """
+    
+    async def classify_event_data(self, event_data: dict) -> DataClassification:
+        """Classify event data to determine optimal processing path"""
+        
+        # Extract features for classification
+        features = {
+            "event_type": event_data.get("event_type"),
+            "experiment_id": event_data.get("experiment_id"),
+            "user_segment": event_data.get("user_segment"),
+            "timestamp": event_data.get("timestamp"),
+            "data_volume": len(str(event_data)),
+            "complexity_score": self.calculate_complexity(event_data)
+        }
+        
+        # AI-powered classification
+        classification = await self.ai_client.classify_data(
+            features=features,
+            context=event_data,
+            historical_patterns=self.get_routing_patterns()
+        )
+        
+        return DataClassification(
+            data_type=classification.type,  # "experiment", "user_behavior", "analytics"
+            priority=classification.priority,  # "high", "medium", "low"
+            target_server=classification.target_server,  # "postgres", "clickhouse", "chromadb"
+            processing_strategy=classification.strategy,  # "real_time", "batch", "stream"
+            retention_policy=classification.retention
+        )
+```
+
+---
+
+## 🧠 **Phase 2: MCP Router Architecture**
+
+### **Intelligent MCP Router**
+```python
+# mcp_router/main.py
+class MCPRouter:
+    """
+    Intelligent routing layer that distributes data to specialized MCP servers
+    """
+    
+    def __init__(self):
+        self.mcp_servers = {
+            "postgres": PostgreSQLMCPServer(),
+            "clickhouse": ClickHouseMCPServer(), 
+            "chromadb": ChromaDBMCPServer(),
+            "experiment_intelligence": ExperimentIntelligenceMCP()
+        }
+        self.routing_engine = IntelligentRoutingEngine()
+    
+    async def route_event(self, event_data: dict, classification: DataClassification):
+        """Route event to appropriate MCP server with intelligent load balancing"""
+        
+        # 1. Determine optimal routing strategy
+        routing_strategy = await self.routing_engine.calculate_optimal_route(
+            event_data=event_data,
+            classification=classification,
+            server_loads=self.get_server_loads(),
+            network_conditions=self.get_network_conditions()
+        )
+        
+        # 2. Route to primary server
+        primary_result = await self.route_to_primary_server(
+            event_data, routing_strategy.primary_server
+        )
+        
+        # 3. Route to secondary servers if needed (for redundancy/analytics)
+        secondary_results = []
+        for secondary_server in routing_strategy.secondary_servers:
+            secondary_result = await self.route_to_secondary_server(
+                event_data, secondary_server
+            )
+            secondary_results.append(secondary_result)
+        
+        return RoutingResult(
+            primary_result=primary_result,
+            secondary_results=secondary_results,
+            routing_strategy=routing_strategy
+        )
+```
+
+### **Specialized MCP Servers**
+
+#### **1. PostgreSQL MCP Server**
+```python
+# mcp_servers/postgresql_mcp.py
+@mcp_server(name="postgresql_intelligence")
+class PostgreSQLMCPServer:
+    """
+    Specialized MCP server for PostgreSQL operations with AI enhancement
+    """
+    
+    def __init__(self):
+        self.db_pool = PostgreSQLConnectionPool()
+        self.ai_client = ExperimentIntelligenceAI()
+    
+    @mcp_tool(name="analyze_experiment_data")
+    async def analyze_experiment_data(self, experiment_id: str):
+        """AI-enhanced experiment analysis using PostgreSQL data"""
+        
+        # Get experiment data from PostgreSQL
+        experiment_data = await self.db_pool.execute("""
+            SELECT e.*, v.*, a.*, u.*
+            FROM experiments e
+            JOIN variants v ON e.id = v.experiment_id
+            JOIN assignments a ON e.id = a.experiment_id
+            JOIN users u ON a.user_id = u.user_id
+            WHERE e.id = %s
+        """, (experiment_id,))
+        
+        # AI-powered analysis
+        insights = await self.ai_client.analyze_experiment_performance(
+            experiment_data=experiment_data,
+            statistical_context=self.get_statistical_context()
+        )
+        
+        return {
+            "experiment_metrics": experiment_data,
+            "ai_insights": insights,
+            "statistical_significance": insights.significance,
+            "recommendations": insights.recommendations
+        }
+    
+    @mcp_tool(name="predict_user_assignment")
+    async def predict_user_assignment(self, user_id: str, experiment_id: str):
+        """Predict optimal user assignment based on historical patterns"""
+        
+        # Get user profile from PostgreSQL
+        user_profile = await self.db_pool.execute("""
+            SELECT u.*, a.*, e.*
+            FROM users u
+            LEFT JOIN assignments a ON u.user_id = a.user_id
+            LEFT JOIN experiments e ON a.experiment_id = e.id
+            WHERE u.user_id = %s
+        """, (user_id,))
+        
+        # AI prediction
+        assignment_prediction = await self.ai_client.predict_optimal_assignment(
+            user_profile=user_profile,
+            experiment_id=experiment_id,
+            historical_assignments=self.get_assignment_history()
+        )
+        
+        return assignment_prediction
+```
+
+#### **2. ClickHouse MCP Server**
+```python
+# mcp_servers/clickhouse_mcp.py
+@mcp_server(name="clickhouse_analytics")
+class ClickHouseMCPServer:
+    """
+    Specialized MCP server for ClickHouse analytics with AI enhancement
+    """
+    
+    def __init__(self):
+        self.clickhouse_client = ClickHouseClient()
+        self.analytics_ai = AnalyticsIntelligenceAI()
+    
+    @mcp_tool(name="generate_analytics_insights")
+    async def generate_analytics_insights(self, query_params: dict):
+        """AI-enhanced analytics generation using ClickHouse data"""
+        
+        # Build optimized ClickHouse query
+        clickhouse_query = await self.build_optimized_query(query_params)
+        
+        # Execute query with performance monitoring
+        results = await self.clickhouse_client.execute(clickhouse_query)
+        
+        # AI-powered insights generation
+        insights = await self.analytics_ai.generate_insights(
+            raw_data=results,
+            query_context=query_params,
+            historical_trends=self.get_historical_trends()
+        )
+        
+        return {
+            "raw_analytics": results,
+            "ai_insights": insights,
+            "performance_metrics": self.get_query_performance(),
+            "recommendations": insights.recommendations
+        }
+    
+    @mcp_tool(name="predict_experiment_trends")
+    async def predict_experiment_trends(self, experiment_id: str, days_ahead: int):
+        """Predict future experiment trends using time series analysis"""
+        
+        # Get historical data
+        historical_data = await self.clickhouse_client.execute("""
+            SELECT 
+                date,
+                conversion_rate,
+                user_count,
+                revenue_impact
+            FROM experiment_daily_metrics
+            WHERE experiment_id = %s
+            ORDER BY date DESC
+            LIMIT 90
+        """, (experiment_id,))
+        
+        # AI-powered trend prediction
+        predictions = await self.analytics_ai.predict_trends(
+            historical_data=historical_data,
+            prediction_horizon=days_ahead,
+            seasonality_patterns=self.get_seasonality_patterns()
+        )
+        
+        return predictions
+```
+
+#### **3. ChromaDB MCP Server**
+```python
+# mcp_servers/chromadb_mcp.py
+@mcp_server(name="chromadb_semantic")
+class ChromaDBMCPServer:
+    """
+    Specialized MCP server for ChromaDB semantic search and vector operations
+    """
+    
+    def __init__(self):
+        self.chromadb_client = ChromaDBClient()
+        self.semantic_ai = SemanticIntelligenceAI()
+    
+    @mcp_tool(name="semantic_experiment_search")
+    async def semantic_experiment_search(self, query: str, filters: dict = None):
+        """Semantic search across experiment knowledge base"""
+        
+        # Generate query embedding
+        query_embedding = await self.semantic_ai.generate_embedding(query)
+        
+        # Perform semantic search
+        search_results = await self.chromadb_client.query(
+            collection_name="experiments",
+            query_embeddings=[query_embedding],
+            n_results=20,
+            where=filters
+        )
+        
+        # AI-enhanced result interpretation
+        interpretation = await self.semantic_ai.interpret_search_results(
+            query=query,
+            results=search_results,
+            context=self.get_search_context()
+        )
+        
+        return {
+            "search_results": search_results,
+            "ai_interpretation": interpretation,
+            "similar_experiments": interpretation.similar_experiments,
+            "recommendations": interpretation.recommendations
+        }
+    
+    @mcp_tool(name="store_experiment_context")
+    async def store_experiment_context(self, experiment_data: dict):
+        """Store experiment with rich semantic context"""
+        
+        # Generate comprehensive embedding
+        context_text = await self.generate_experiment_description(experiment_data)
+        embedding = await self.semantic_ai.generate_embedding(context_text)
+        
+        # Store with rich metadata
+        await self.chromadb_client.add(
+            collection_name="experiments",
+            documents=[context_text],
+            embeddings=[embedding],
+            metadatas=[{
+                "experiment_id": experiment_data["id"],
+                "experiment_type": experiment_data["type"],
+                "industry": experiment_data.get("industry"),
+                "user_segment": experiment_data.get("target_segment"),
+                "conversion_rate": experiment_data.get("conversion_rate"),
+                "statistical_significance": experiment_data.get("significance"),
+                "outcome": experiment_data.get("outcome"),
+                "timestamp": experiment_data["created_at"]
+            }],
+            ids=[experiment_data["id"]]
+        )
+        
+        return {"status": "stored", "experiment_id": experiment_data["id"]}
+```
+
+#### **4. Experiment Intelligence MCP Server**
+```python
+# mcp_servers/experiment_intelligence.py
+@mcp_server(name="experiment_intelligence")
+class ExperimentIntelligenceMCP:
+    """
+    AI-powered experiment intelligence and optimization
+    """
+    
+    def __init__(self):
+        self.ai_client = ExperimentIntelligenceAI()
+        self.postgres_mcp = PostgreSQLMCPServer()
+        self.clickhouse_mcp = ClickHouseMCPServer()
+        self.chromadb_mcp = ChromaDBMCPServer()
+    
+    @mcp_tool(name="recommend_experiment_optimization")
+    async def recommend_experiment_optimization(self, experiment_id: str):
+        """AI-powered experiment optimization recommendations"""
+        
+        # 1. Get experiment data from PostgreSQL MCP
+        experiment_data = await self.postgres_mcp.analyze_experiment_data(experiment_id)
+        
+        # 2. Get analytics insights from ClickHouse MCP
+        analytics_insights = await self.clickhouse_mcp.generate_analytics_insights({
+            "experiment_id": experiment_id,
+            "time_range": "30d"
+        })
+        
+        # 3. Find similar experiments from ChromaDB MCP
+        similar_experiments = await self.chromadb_mcp.semantic_experiment_search(
+            f"experiment optimization {experiment_data['experiment_metrics']['name']}"
+        )
+        
+        # 4. Generate AI-powered recommendations
+        recommendations = await self.ai_client.generate_optimization_plan(
+            current_experiment=experiment_data,
+            analytics_insights=analytics_insights,
+            similar_experiments=similar_experiments
+        )
+        
+        return recommendations
+```
+
+---
+
+## 🔍 **Phase 3: Enhanced Event Schema**
+
+### **Kafka Event Schema with AI Context**
 ```json
 {
   "event_id": "evt_123",
   "user_id": "user_456", 
   "experiment_id": "exp_789",
   "event_type": "conversion",
-  "timestamp": "2025-09-29T21:00:00Z",
+  "timestamp": "2025-09-30T13:00:00Z",
   
   // Enhanced AI Fields
-  "ai_context": {
-    "user_journey_stage": "consideration",
-    "behavioral_score": 0.85,
-    "intent_prediction": "high_purchase_intent",
-    "segment": "power_user"
+  "ai_classification": {
+    "data_type": "experiment_event",
+    "priority": "high",
+    "target_servers": ["postgres", "clickhouse", "chromadb"],
+    "processing_strategy": "real_time",
+    "retention_policy": "long_term"
   },
   
-  "semantic_features": {
+  "semantic_context": {
     "embedding_vector": [0.1, 0.2, ...],  // 1536-dim vector
     "context_keywords": ["pricing", "features", "comparison"],
-    "sentiment_score": 0.7
+    "sentiment_score": 0.7,
+    "user_journey_stage": "consideration"
   },
   
-  "prediction_context": {
-    "likely_next_action": "purchase",
-    "probability": 0.78,
-    "recommended_variant": "premium_trial"
+  "routing_metadata": {
+    "source_system": "web_app",
+    "processing_pipeline": "ai_enhanced",
+    "expected_latency": "real_time",
+    "data_quality_score": 0.95
   }
 }
 ```
 
 ---
 
-## 🧠 **Phase 2: MCP Server Integration**
+## 📊 **Phase 4: AI-Enhanced Analytics Capabilities**
 
-### **MCP Server Architecture**
-```
-┌─────────────────────────────────────────────────────────┐
-│                    MCP Server Layer                     │
-├─────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
-│  │ Experiment  │  │ User        │  │ Optimization│     │
-│  │ Intelligence│  │ Behavior    │  │ Engine      │     │  
-│  │ MCP Server  │  │ MCP Server  │  │ MCP Server  │     │
-│  └─────────────┘  └─────────────┘  └─────────────┘     │
-├─────────────────────────────────────────────────────────┤
-│                    Shared Resources                     │
-│  • ChromaDB Vector Store                                │
-│  • OpenAI/Anthropic API Access                         │
-│  • Experiment Knowledge Base                           │
-│  • Statistical Models & ML Pipelines                   │
-└─────────────────────────────────────────────────────────┘
-```
-
-### **MCP Server Capabilities**
-
-#### **1. Experiment Intelligence MCP Server**
+### **Natural Language Analytics Interface**
 ```python
-# experiment_intelligence_mcp.py
-@mcp_server(name="experiment_intelligence")
-class ExperimentIntelligenceMCP:
-    """
-    AI-powered experiment analysis and recommendations
-    """
+# Natural language query processing
+async def natural_language_analytics(query: str):
+    """Process natural language analytics queries across all data sources"""
     
-    @mcp_tool(name="analyze_experiment_performance")
-    async def analyze_performance(self, experiment_id: str):
-        """Analyze experiment with AI insights"""
-        # Get experiment data from ChromaDB
-        similar_experiments = await self.chromadb.query(
-            query_texts=[f"experiment {experiment_id} performance"],
-            n_results=10
-        )
-        
-        # AI Analysis
-        insights = await self.ai_client.analyze_experiment(
-            experiment_data=experiment_data,
-            similar_contexts=similar_experiments
-        )
-        
-        return {
-            "statistical_significance": insights.significance,
-            "confidence_interval": insights.confidence,
-            "recommendations": insights.recommendations,
-            "similar_experiment_insights": similar_experiments,
-            "predicted_outcomes": insights.predictions
-        }
+    # Example queries:
+    # "Show me experiments similar to our checkout optimization that increased conversion by more than 20%"
+    # "What user segments responded best to pricing experiments in the last quarter?"
+    # "Recommend optimization strategies for our mobile onboarding experiment"
     
-    @mcp_tool(name="recommend_experiment_optimization")
-    async def recommend_optimization(self, experiment_id: str):
-        """AI-powered experiment optimization recommendations"""
-        # Semantic search for similar optimization patterns
-        optimization_patterns = await self.chromadb.query(
-            query_texts=[f"optimize experiment performance {experiment_id}"],
-            n_results=20,
-            where={"type": "optimization_success"}
-        )
-        
-        # Generate personalized recommendations
-        recommendations = await self.ai_client.generate_optimization_plan(
-            current_experiment=experiment_data,
-            success_patterns=optimization_patterns,
-            user_segments=user_segments
-        )
-        
-        return recommendations
+    # 1. Parse intent and extract entities
+    intent = await parse_query_intent(query)
+    entities = await extract_entities(query)
+    
+    # 2. Route to appropriate MCP servers
+    if intent.type == "experiment_search":
+        # Use ChromaDB MCP for semantic search
+        results = await chromadb_mcp.semantic_experiment_search(query)
+    elif intent.type == "analytics":
+        # Use ClickHouse MCP for analytics
+        results = await clickhouse_mcp.generate_analytics_insights(entities)
+    elif intent.type == "experiment_analysis":
+        # Use PostgreSQL MCP for detailed analysis
+        results = await postgres_mcp.analyze_experiment_data(entities.experiment_id)
+    
+    # 3. AI-enhanced interpretation and recommendations
+    insights = await ai_client.generate_comprehensive_insights(
+        query=query,
+        results=results,
+        context=entities
+    )
+    
+    return insights
 ```
 
-#### **2. User Behavior Intelligence MCP Server**
+### **Real-time Experiment Optimization**
 ```python
-# user_behavior_mcp.py
-@mcp_server(name="user_behavior_intelligence")
-class UserBehaviorMCP:
-    """
-    Real-time user behavior analysis and prediction
-    """
+# Real-time optimization pipeline
+@kafka_consumer(topic="experiment_metrics")
+async def real_time_optimization_processor(metrics_data):
+    """Real-time experiment optimization based on streaming metrics"""
     
-    @mcp_tool(name="predict_user_behavior")
-    async def predict_behavior(self, user_id: str, context: dict):
-        """Predict likely user actions based on behavioral patterns"""
-        # Get user's behavioral embedding from ChromaDB
-        user_profile = await self.chromadb.get_user_embedding(user_id)
-        
-        # Find similar user journeys
-        similar_users = await self.chromadb.query(
-            query_embeddings=[user_profile.embedding],
-            n_results=50,
-            where={"user_segment": user_profile.segment}
-        )
-        
-        # AI prediction
-        predictions = await self.ai_client.predict_behavior(
-            user_context=context,
-            similar_patterns=similar_users,
-            current_experiment_state=current_state
-        )
-        
-        return predictions
+    # 1. Analyze current performance
+    performance_analysis = await experiment_intelligence_mcp.analyze_current_performance(
+        metrics_data.experiment_id
+    )
     
-    @mcp_tool(name="personalize_experiment_experience")
-    async def personalize_experience(self, user_id: str, experiment_id: str):
-        """Personalize experiment experience based on user context"""
-        # Get contextual embeddings
-        user_context = await self.get_user_context_embedding(user_id)
-        experiment_context = await self.get_experiment_embedding(experiment_id)
-        
-        # Semantic search for successful personalization patterns
-        personalization_patterns = await self.chromadb.query(
-            query_embeddings=[user_context, experiment_context],
-            n_results=30,
-            where={"outcome": "positive", "type": "personalization"}
+    # 2. Check for optimization opportunities
+    if performance_analysis.optimization_opportunity:
+        # 3. Get optimization recommendations
+        recommendations = await experiment_intelligence_mcp.recommend_experiment_optimization(
+            metrics_data.experiment_id
         )
         
-        # Generate personalization strategy
-        strategy = await self.ai_client.generate_personalization(
-            user_profile=user_profile,
-            experiment_config=experiment_config,
-            success_patterns=personalization_patterns
-        )
-        
-        return strategy
-```
-
----
-
-## 🔍 **Phase 3: ChromaDB Integration**
-
-### **Vector Store Architecture**
-```python
-# chromadb_manager.py
-class ExperimentVectorStore:
-    """
-    ChromaDB integration for semantic experiment analytics
-    """
-    
-    def __init__(self):
-        self.client = chromadb.Client()
-        self.collections = {
-            "experiments": self.client.create_collection(
-                name="experiments",
-                embedding_function=self.openai_embedding_function,
-                metadata={"hnsw:space": "cosine"}
-            ),
-            "user_journeys": self.client.create_collection(
-                name="user_journeys",
-                embedding_function=self.custom_behavioral_embedding
-            ),
-            "optimization_patterns": self.client.create_collection(
-                name="optimization_patterns",
-                embedding_function=self.openai_embedding_function
-            )
-        }
-    
-    async def store_experiment_context(self, experiment_data):
-        """Store experiment with rich context for semantic search"""
-        
-        # Generate comprehensive embedding
-        context_text = self.generate_experiment_description(experiment_data)
-        
-        # Store with rich metadata
-        self.collections["experiments"].add(
-            documents=[context_text],
-            embeddings=[experiment_data.embedding_vector],
-            metadatas=[{
-                "experiment_id": experiment_data.id,
-                "experiment_type": experiment_data.type,
-                "industry": experiment_data.industry,
-                "user_segment": experiment_data.target_segment,
-                "conversion_rate": experiment_data.conversion_rate,
-                "statistical_power": experiment_data.statistical_power,
-                "outcome": experiment_data.outcome,  # "success", "failure", "neutral"
-                "optimization_applied": experiment_data.optimizations,
-                "timestamp": experiment_data.created_at
-            }],
-            ids=[experiment_data.id]
-        )
-    
-    async def semantic_experiment_search(self, query: str, filters: dict = None):
-        """Semantic search across experiment knowledge base"""
-        
-        results = self.collections["experiments"].query(
-            query_texts=[query],
-            n_results=20,
-            where=filters,
-            include=["documents", "metadatas", "distances"]
-        )
-        
-        # Enhanced with AI summarization
-        insights = await self.ai_client.summarize_search_results(
-            query=query,
-            results=results,
-            context="experiment_optimization"
-        )
-        
-        return {
-            "search_results": results,
-            "ai_insights": insights,
-            "recommendations": insights.recommendations
-        }
-```
-
-### **ChromaDB Collections Schema**
-
-#### **1. Experiments Collection**
-```python
-{
-    "collection": "experiments",
-    "documents": [
-        "A/B test on checkout flow optimization for e-commerce platform targeting mobile users with 2-step vs 1-step checkout process. Results: 15% conversion rate improvement with 1-step flow.",
-        "Feature flag experiment for premium subscription upsell modal timing. Tested immediate vs delayed (5-minute) modal display. Delayed timing increased conversion by 23%."
-    ],
-    "embeddings": [[0.1, 0.2, ...], [0.3, 0.4, ...]],  // 1536-dim vectors
-    "metadatas": [
-        {
-            "experiment_id": "exp_001",
-            "type": "conversion_optimization", 
-            "industry": "ecommerce",
-            "user_segment": "mobile_users",
-            "conversion_rate": 0.15,
-            "statistical_significance": 0.95,
-            "sample_size": 10000,
-            "outcome": "success"
-        }
-    ]
-}
-```
-
-#### **2. User Journeys Collection**
-```python
-{
-    "collection": "user_journeys", 
-    "documents": [
-        "User journey: landing_page -> product_detail -> add_to_cart -> checkout_start -> purchase_complete. High-intent mobile user, 15-minute session, premium segment.",
-        "User journey: homepage -> search -> category_browse -> product_comparison -> exit. Research phase, desktop user, 45-minute session."
-    ],
-    "embeddings": [[0.5, 0.6, ...], [0.7, 0.8, ...]],  // Custom behavioral embeddings
-    "metadatas": [
-        {
-            "user_segment": "premium_mobile",
-            "journey_length": 5,
-            "session_duration": 900,  // seconds
-            "conversion_outcome": "purchased",
-            "value": 99.99,
-            "device_type": "mobile",
-            "traffic_source": "organic"
-        }
-    ]
-}
-```
-
-#### **3. Optimization Patterns Collection**
-```python
-{
-    "collection": "optimization_patterns",
-    "documents": [
-        "Successful optimization: Reduced checkout steps from 4 to 2, added progress indicator, implemented autofill. Result: 35% conversion improvement across all user segments.",
-        "Failed optimization: Added social proof notifications during checkout process. Result: 8% conversion decrease due to distraction and cognitive load increase."
-    ],
-    "embeddings": [[0.9, 0.1, ...], [0.2, 0.8, ...]],
-    "metadatas": [
-        {
-            "optimization_type": "checkout_flow",
-            "outcome": "success", 
-            "improvement_percentage": 35,
-            "applied_to_segments": ["mobile", "desktop", "tablet"],
-            "industry": "ecommerce",
-            "implementation_effort": "medium"
-        }
-    ]
-}
-```
-
----
-
-## 🤖 **Phase 4: AI-Enhanced Analytics**
-
-### **Intelligent Query Interface**
-```python
-# ai_analytics_engine.py
-class AIAnalyticsEngine:
-    """
-    Natural language interface for experiment analytics
-    """
-    
-    async def natural_language_query(self, query: str, context: dict):
-        """Process natural language analytics queries"""
-        
-        # Example queries:
-        # "Show me experiments similar to our checkout optimization that increased conversion by more than 20%"
-        # "What user segments responded best to pricing experiments in the last quarter?"
-        # "Recommend optimization strategies for our mobile onboarding experiment"
-        
-        # 1. Parse intent and extract entities
-        intent = await self.parse_query_intent(query)
-        entities = await self.extract_entities(query)
-        
-        # 2. Semantic search in ChromaDB
-        relevant_data = await self.chromadb.query(
-            query_texts=[query],
-            n_results=50,
-            where=self.build_filters(entities)
-        )
-        
-        # 3. Generate SQL for ClickHouse analytics
-        sql_query = await self.generate_analytics_sql(
-            intent=intent,
-            entities=entities,
-            relevant_context=relevant_data
-        )
-        
-        # 4. Execute and get results  
-        raw_results = await self.clickhouse.execute(sql_query)
-        
-        # 5. AI-enhanced interpretation
-        insights = await self.ai_client.interpret_analytics_results(
-            query=query,
-            results=raw_results,
-            context=relevant_data,
-            historical_patterns=self.get_historical_context()
-        )
-        
-        return {
-            "results": raw_results,
-            "ai_interpretation": insights,
-            "recommendations": insights.recommendations,
-            "confidence_score": insights.confidence,
-            "related_insights": relevant_data
-        }
-```
-
-### **Predictive Analytics Integration**
-```python
-# predictive_experiment_engine.py
-class PredictiveExperimentEngine:
-    """
-    AI-powered experiment outcome prediction and optimization
-    """
-    
-    async def predict_experiment_outcome(self, experiment_config: dict):
-        """Predict experiment outcome before running"""
-        
-        # 1. Find similar experiments in ChromaDB
-        similar_experiments = await self.chromadb.query(
-            query_texts=[self.describe_experiment(experiment_config)],
-            n_results=100,
-            where={"outcome": {"$in": ["success", "failure"]}}
-        )
-        
-        # 2. Extract features and patterns
-        features = self.extract_predictive_features(
-            experiment_config, similar_experiments
-        )
-        
-        # 3. AI prediction
-        prediction = await self.ai_client.predict_outcome(
-            features=features,
-            historical_data=similar_experiments,
-            statistical_context=self.get_statistical_context()
-        )
-        
-        return {
-            "predicted_outcome": prediction.outcome,  # "success", "failure", "neutral"
-            "confidence": prediction.confidence,
-            "expected_lift": prediction.expected_lift,
-            "recommended_sample_size": prediction.sample_size,
-            "estimated_duration": prediction.duration_days,
-            "risk_factors": prediction.risks,
-            "optimization_suggestions": prediction.optimizations
-        }
-    
-    async def optimize_ongoing_experiment(self, experiment_id: str):
-        """Real-time experiment optimization recommendations"""
-        
-        # 1. Get current performance data
-        current_data = await self.get_experiment_metrics(experiment_id)
-        
-        # 2. Find successful optimization patterns
-        optimization_patterns = await self.chromadb.query(
-            query_texts=[f"optimize experiment performance {current_data.description}"],
-            n_results=50,
-            where={"outcome": "success", "optimization_applied": {"$ne": None}}
-        )
-        
-        # 3. AI-powered optimization recommendations
-        recommendations = await self.ai_client.generate_optimization_plan(
-            current_performance=current_data,
-            optimization_patterns=optimization_patterns,
-            statistical_constraints=self.get_statistical_constraints()
-        )
-        
-        return recommendations
-```
-
----
-
-## 📊 **Enhanced Analytics Capabilities**
-
-### **1. Contextual Experiment Discovery**
-```sql
--- Natural Language: "Find experiments similar to our pricing test that improved revenue"
-
--- AI translates to ChromaDB query + ClickHouse analytics:
-WITH similar_experiments AS (
-  -- ChromaDB semantic search results
-  SELECT experiment_id FROM chromadb_similar_experiments 
-  WHERE similarity_score > 0.8
-)
-SELECT 
-    e.experiment_id,
-    e.experiment_name,
-    e.conversion_rate_improvement,
-    e.revenue_impact,
-    e.statistical_significance,
-    ai_insights.recommendations
-FROM experiments e
-JOIN similar_experiments s ON e.experiment_id = s.experiment_id  
-JOIN ai_experiment_insights ai ON e.experiment_id = ai.experiment_id
-WHERE e.revenue_impact > 0
-ORDER BY e.statistical_significance DESC;
-```
-
-### **2. Intelligent A/B Test Recommendations**
-```python
-# AI-powered test suggestions
-{
-  "recommended_experiments": [
-    {
-      "experiment_type": "checkout_optimization",
-      "hypothesis": "Reducing checkout steps will increase mobile conversion by 20%",
-      "confidence": 0.85,
-      "based_on_patterns": [
-        "Similar e-commerce sites saw 25% improvement with 2-step checkout",
-        "Your mobile users show high cart abandonment at step 3",
-        "Seasonal patterns indicate Q4 checkout optimization performs 2x better"
-      ],
-      "recommended_variants": [
-        {"name": "2-step checkout", "expected_lift": "15-25%"},
-        {"name": "1-step express checkout", "expected_lift": "20-30%"}
-      ],
-      "optimal_timing": "Start immediately for holiday season impact",
-      "sample_size": 15000,
-      "duration": "14 days"
-    }
-  ]
-}
+        # 4. Apply optimizations if confidence is high
+        if recommendations.confidence > 0.8:
+            await apply_experiment_optimizations(recommendations)
+            
+        # 5. Log optimization actions
+        await log_optimization_action(metrics_data.experiment_id, recommendations)
 ```
 
 ---
@@ -556,108 +516,93 @@ ORDER BY e.statistical_significance DESC;
 ## 🛠️ **Implementation Roadmap**
 
 ### **Phase 1: Foundation (Months 1-2)**
-- ✅ **Kafka Stream Processing**: Enhanced event processing with AI context
-- ✅ **ChromaDB Setup**: Vector store with experiment embeddings  
-- ✅ **Basic MCP Servers**: Experiment intelligence and user behavior
-- ✅ **AI Integration**: OpenAI/Anthropic API integration
+- ✅ **Kafka Stream Processing**: Enhanced event processing with AI classification
+- ✅ **MCP Router**: Intelligent routing to specialized servers
+- ✅ **PostgreSQL MCP Server**: Database-specific AI operations
+- ✅ **ClickHouse MCP Server**: Analytics-specific AI operations
+- ✅ **ChromaDB MCP Server**: Semantic search operations
 
 ### **Phase 2: Intelligence (Months 3-4)**  
-- 🔄 **Advanced MCP Tools**: Predictive analytics and optimization
-- 🔄 **Natural Language Interface**: Query experiments in plain English
-- 🔄 **Real-time Recommendations**: Live experiment optimization
-- 🔄 **Semantic Search**: Context-aware experiment discovery
+- 🔄 **Experiment Intelligence MCP**: AI-powered experiment optimization
+- 🔄 **Natural Language Interface**: Query across all data sources
+- 🔄 **Real-time Optimization**: Live experiment parameter tuning
+- 🔄 **Predictive Analytics**: Outcome prediction and trend forecasting
 
-### **Phase 3: Optimization (Months 5-6)**
-- 🔄 **Auto-optimization**: AI-driven experiment parameter tuning  
-- 🔄 **Predictive Modeling**: Outcome prediction before experiments run
-- 🔄 **Intelligent Segmentation**: AI-powered user segment discovery
-- 🔄 **Advanced Analytics**: Multi-dimensional insight generation
+### **Phase 3: Automation (Months 5-6)**
+- 🔄 **Autonomous Experiment Management**: AI-driven experiment lifecycle
+- 🔄 **Intelligent Traffic Allocation**: Real-time traffic optimization
+- 🔄 **Self-Healing Experiments**: Automatic issue detection and resolution
+- 🔄 **Advanced Personalization**: AI-powered user experience optimization
 
 ---
 
 ## 💡 **Expected Benefits**
 
 ### **For Product Teams**
-- **🤖 AI-Powered Insights**: Natural language experiment analysis
+- **🤖 AI-Powered Insights**: Natural language analytics across all data sources
 - **🔮 Predictive Analytics**: Know experiment outcomes before running
-- **🎯 Intelligent Recommendations**: AI suggests optimal experiments
-- **🧠 Contextual Discovery**: Find relevant experiments from history
+- **🎯 Intelligent Recommendations**: AI suggests optimal experiments and optimizations
+- **🧠 Contextual Discovery**: Semantic search across experiment history
 
 ### **For Engineering Teams**  
-- **⚡ Real-time Processing**: Stream-based AI event processing
-- **🔍 Semantic Search**: Context-aware experiment discovery
-- **🔧 MCP Integration**: Modular AI tool architecture  
-- **📊 Enhanced Analytics**: AI-augmented data insights
+- **⚡ Kafka-First Architecture**: Real-time stream processing with intelligent routing
+- **🔍 Specialized MCP Servers**: Database-specific AI operations
+- **🔧 Modular Architecture**: Easy to extend and maintain
+- **📊 Enhanced Analytics**: AI-augmented insights from all data sources
 
 ### **For Business Teams**
-- **📈 Revenue Optimization**: AI identifies highest-impact tests
+- **📈 Revenue Optimization**: AI identifies highest-impact experiments
 - **⏱️ Faster Insights**: Reduce experiment analysis time by 80%
 - **🎪 Personalized Experiences**: AI-driven user personalization
-- **🔬 Scientific Rigor**: AI validates statistical significance
+- **🔬 Scientific Rigor**: AI validates statistical significance and recommendations
 
 ---
 
-## 🔮 **Future Vision: Autonomous Experimentation**
-
-### **Fully Autonomous A/B Testing Platform**
-```
-Human Input: "Increase mobile conversion rate"
-            ↓
-AI Analysis: User behavior patterns, market trends, historical data
-            ↓  
-AI Hypothesis: "Simplify checkout + add social proof + optimize timing"
-            ↓
-Auto-Experiment: Creates A/B test, allocates traffic, monitors metrics
-            ↓
-AI Optimization: Real-time adjustments based on early signals  
-            ↓
-Auto-Conclusion: Statistical analysis + business impact report
-            ↓
-Auto-Implementation: Rolls out winning variant to 100% traffic
-```
-
-### **Key Features**
-- 🤖 **Autonomous Experiment Design**: AI creates experiments from business goals
-- 🎯 **Dynamic Traffic Allocation**: Real-time traffic optimization based on performance
-- 📊 **Continuous Learning**: System learns from every experiment to improve future tests
-- 🔄 **Self-Healing**: Automatically detects and fixes experiment issues
-- 🧬 **Evolutionary Optimization**: Experiments evolve and iterate automatically
-
----
-
-## 🚀 **Getting Started with AI Enhancement**
+## 🚀 **Getting Started with Kafka-First AI Architecture**
 
 ### **Prerequisites**
 ```bash
 # Install additional dependencies
-pip install chromadb openai anthropic mcp-server
+pip install chromadb openai anthropic mcp-server kafka-python
 
 # Set environment variables
 export OPENAI_API_KEY="your_key_here"
 export ANTHROPIC_API_KEY="your_key_here" 
 export CHROMADB_HOST="localhost:8000"
+export KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
 ```
 
 ### **Quick Start**
 ```bash
-# 1. Start enhanced services
+# 1. Start Kafka and enhanced services
 docker-compose -f config/docker-compose-ai.yml up -d
 
-# 2. Initialize ChromaDB with historical data
-python scripts/migrate_to_chromadb.py
+# 2. Start MCP Router
+python ai_services/mcp_router/main.py
 
-# 3. Start MCP servers
-mcp-server start experiment_intelligence_mcp.py
-mcp-server start user_behavior_mcp.py
+# 3. Start specialized MCP servers
+python ai_services/mcp_servers/postgresql_mcp.py &
+python ai_services/mcp_servers/clickhouse_mcp.py &
+python ai_services/mcp_servers/chromadb_mcp.py &
+python ai_services/mcp_servers/experiment_intelligence.py &
 
-# 4. Test AI-enhanced analytics
-python tests/ai/test_semantic_search.py
+# 4. Start Kafka stream processor
+python ai_services/stream_processor/main.py
+
+# 5. Test AI-enhanced analytics
+python tests/ai/test_kafka_mcp_integration.py
 ```
 
 ---
 
-## 🎉 **The Future is Intelligent Experimentation**
+## 🎉 **The Future is Kafka-First Intelligent Experimentation**
 
-This AI-enhanced architecture will transform NeonBlue from a powerful A/B testing platform into an **intelligent experimentation ecosystem** that learns, predicts, and optimizes automatically.
+This Kafka-first AI architecture transforms NeonBlue into an **intelligent experimentation ecosystem** that:
 
-**The result**: Faster insights, better decisions, and autonomous optimization that scales with your business needs! 🚀🤖
+- **Streams data through Kafka** for real-time processing
+- **Routes intelligently** to specialized MCP servers
+- **Processes semantically** across PostgreSQL, ClickHouse, and ChromaDB
+- **Learns continuously** from every experiment and user interaction
+- **Optimizes automatically** based on AI insights and predictions
+
+**The result**: A truly intelligent, scalable, and autonomous experimentation platform! 🚀🤖
