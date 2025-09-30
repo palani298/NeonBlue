@@ -1,0 +1,178 @@
+version: '3.8'
+
+services:
+  # Extend base services from main docker-compose.yml
+  # ChromaDB Vector Database
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: experiments-chromadb
+    ports:
+      - "8001:8000"  # Avoid conflict with API port
+    environment:
+      CHROMA_SERVER_HOST: 0.0.0.0
+      CHROMA_SERVER_HTTP_PORT: 8000
+      PERSIST_DIRECTORY: /chroma/chroma
+    volumes:
+      - chromadb_data:/chroma/chroma
+    networks:
+      - experiments-network
+
+  # MCP Router Service - The Intelligence Layer
+  mcp-router:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile.mcp
+    container_name: experiments-mcp-router
+    ports:
+      - "8002:8000"  # MCP Router API
+    environment:
+      DATABASE_URL: postgresql+asyncpg://experiments:password@postgres:5432/experiments
+      CLICKHOUSE_HOST: experiments-clickhouse
+      CHROMADB_HOST: chromadb:8000
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-your-anthropic-key}
+      MCP_PORT: 8000
+      LOG_LEVEL: INFO
+    depends_on:
+      - chromadb
+      - kafka
+      - postgres
+      - clickhouse
+    volumes:
+      - ../ai_services:/app/ai_services
+    command: python -m ai_services.mcp_router.main
+    networks:
+      - experiments-network
+
+  # Experiment Intelligence MCP Server
+  mcp-experiment-intelligence:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile.mcp
+    container_name: experiments-mcp-exp-intel
+    ports:
+      - "8003:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://experiments:password@postgres:5432/experiments
+      CLICKHOUSE_HOST: experiments-clickhouse
+      CHROMADB_HOST: chromadb:8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      MCP_SERVER_NAME: experiment_intelligence
+      MCP_PORT: 8000
+    depends_on:
+      - chromadb
+      - postgres
+      - clickhouse
+    volumes:
+      - ../ai_services:/app/ai_services
+    command: python -m ai_services.mcp_servers.experiment_intelligence
+    networks:
+      - experiments-network
+
+  # User Behavior Intelligence MCP Server  
+  mcp-user-behavior:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile.mcp
+    container_name: experiments-mcp-user-behavior
+    ports:
+      - "8004:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://experiments:password@postgres:5432/experiments
+      CLICKHOUSE_HOST: experiments-clickhouse
+      CHROMADB_HOST: chromadb:8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      MCP_SERVER_NAME: user_behavior_intelligence
+      MCP_PORT: 8000
+    depends_on:
+      - chromadb
+      - postgres
+      - clickhouse
+    volumes:
+      - ../ai_services:/app/ai_services
+    command: python -m ai_services.mcp_servers.user_behavior
+    networks:
+      - experiments-network
+
+  # Optimization Engine MCP Server
+  mcp-optimization:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile.mcp
+    container_name: experiments-mcp-optimization
+    ports:
+      - "8005:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://experiments:password@postgres:5432/experiments
+      CLICKHOUSE_HOST: experiments-clickhouse  
+      CHROMADB_HOST: chromadb:8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-your-anthropic-key}
+      MCP_SERVER_NAME: optimization_engine
+      MCP_PORT: 8000
+    depends_on:
+      - chromadb
+      - postgres
+      - clickhouse
+    volumes:
+      - ../ai_services:/app/ai_services
+    command: python -m ai_services.mcp_servers.optimization
+    networks:
+      - experiments-network
+
+  # Kafka Stream Processor for AI Enhancement
+  ai-stream-processor:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile.mcp
+    container_name: experiments-ai-processor
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MCP_ROUTER_HOST: mcp-router:8000
+      CHROMADB_HOST: chromadb:8000
+      DATABASE_URL: postgresql+asyncpg://experiments:password@postgres:5432/experiments
+      CLICKHOUSE_HOST: experiments-clickhouse
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      CONSUMER_GROUP_ID: ai_processor
+    depends_on:
+      - kafka
+      - mcp-router
+      - chromadb
+    volumes:
+      - ../ai_services:/app/ai_services
+    command: python -m ai_services.stream_processor.main
+    networks:
+      - experiments-network
+
+  # AI Analytics API - Natural Language Interface
+  ai-analytics-api:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile.mcp
+    container_name: experiments-ai-analytics
+    ports:
+      - "8006:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://experiments:password@postgres:5432/experiments
+      CLICKHOUSE_HOST: experiments-clickhouse
+      CHROMADB_HOST: chromadb:8000
+      MCP_ROUTER_HOST: mcp-router:8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-your-anthropic-key}
+    depends_on:
+      - mcp-router
+      - chromadb
+    volumes:
+      - ../ai_services:/app/ai_services
+    command: python -m ai_services.analytics_api.main
+    networks:
+      - experiments-network
+
+networks:
+  experiments-network:
+    external: true  # Use the network from main docker-compose
+
+volumes:
+  chromadb_data:
+    driver: local

@@ -26,7 +26,7 @@ router = APIRouter()
 async def create_api_token(
     token_data: ApiTokenCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(auth.verify_token)
+    current_user: dict = Depends(auth.require_scope("admin"))
 ):
     """Create a new API token."""
     try:
@@ -63,7 +63,7 @@ async def create_api_token(
 async def get_api_token(
     token_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """Get API token by ID."""
     result = await db.execute(
@@ -86,7 +86,7 @@ async def list_api_tokens(
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """List API tokens with optional filtering."""
     query = select(ApiToken).limit(limit).offset(offset)
@@ -119,7 +119,7 @@ async def update_api_token(
     token_id: int,
     update_data: ApiTokenUpdate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """Update API token details."""
     result = await db.execute(
@@ -150,7 +150,7 @@ async def update_api_token(
 async def delete_api_token(
     token_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """Delete an API token."""
     result = await db.execute(
@@ -176,7 +176,7 @@ async def delete_api_token(
 async def regenerate_api_token(
     token_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """Regenerate an API token."""
     result = await db.execute(

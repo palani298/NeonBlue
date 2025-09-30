@@ -48,7 +48,7 @@ async def get_experiment_results(
         description="Minimum sample size for reporting"
     ),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("results:read"))
 ):
     """
     Get experiment performance results with flexible analysis options.

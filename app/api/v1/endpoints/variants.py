@@ -25,7 +25,7 @@ async def create_variant(
     variant_data: VariantCreate,
     experiment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("variants:write"))
 ):
     """Create a new variant for an experiment."""
     try:
@@ -87,7 +87,7 @@ async def create_variant(
 async def get_variant(
     variant_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("variants:read"))
 ):
     """Get variant by ID."""
     result = await db.execute(
@@ -110,7 +110,7 @@ async def list_variants(
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("variants:read"))
 ):
     """List variants with optional filtering by experiment."""
     query = select(Variant).limit(limit).offset(offset)
@@ -129,7 +129,7 @@ async def update_variant(
     variant_id: int,
     update_data: VariantUpdate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("variants:write"))
 ):
     """Update variant details."""
     result = await db.execute(
@@ -160,7 +160,7 @@ async def update_variant(
 async def delete_variant(
     variant_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("variants:write"))
 ):
     """Delete a variant."""
     result = await db.execute(

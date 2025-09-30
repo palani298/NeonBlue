@@ -24,7 +24,7 @@ router = APIRouter()
 @router.get("/stats", response_model=DataStatsResponse)
 async def get_data_stats(
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """Get data statistics for both PostgreSQL and ClickHouse."""
     try:
@@ -52,7 +52,7 @@ async def get_data_stats(
 async def cleanup_old_data(
     request: DataCleanupRequest,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """Clean up old data based on retention policies."""
     try:
@@ -93,7 +93,7 @@ async def cleanup_old_data(
 
 @router.get("/retention-policies", response_model=List[RetentionPolicy])
 async def get_retention_policies(
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("admin"))
 ):
     """Get current data retention policies."""
     return [

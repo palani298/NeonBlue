@@ -25,7 +25,7 @@ router = APIRouter()
 async def create_user(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("users:write"))
 ):
     """Create a new user."""
     try:
@@ -81,7 +81,7 @@ async def create_user(
 async def get_user(
     user_id: str,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("users:read"))
 ):
     """Get user by ID."""
     result = await db.execute(
@@ -104,7 +104,7 @@ async def list_users(
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("users:read"))
 ):
     """List users with optional filtering."""
     query = select(User).limit(limit).offset(offset)
@@ -137,7 +137,7 @@ async def update_user(
     user_id: str,
     update_data: UserUpdate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("users:write"))
 ):
     """Update user details."""
     result = await db.execute(
@@ -180,7 +180,7 @@ async def delete_user(
     user_id: str,
     hard_delete: bool = Query(default=False, description="Permanently delete user"),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("users:write"))
 ):
     """Delete a user."""
     result = await db.execute(

@@ -1,0 +1,121 @@
+{
+  "admin": {
+    "token": "admin_FYvh0whTsAXiWDzyq-lJ3alUPlH2j5vnN5V9mdL-",
+    "name": "Admin Token",
+    "description": "Full administrative access to all resources",
+    "scopes": [
+      "*"
+    ],
+    "rate_limit": 1000,
+    "expires_days": 365,
+    "is_active": true
+  },
+  "readonly": {
+    "token": "readonly_yI9Kf1N1CHDnMNOyvYc_Ll1VVRbldTMq",
+    "name": "Read-Only Token",
+    "description": "Read-only access to experiments, assignments, and analytics",
+    "scopes": [
+      "experiments:read",
+      "assignments:read",
+      "users:read",
+      "analytics:read",
+      "events:read"
+    ],
+    "rate_limit": 500,
+    "expires_days": 180,
+    "is_active": true
+  },
+  "write": {
+    "token": "write_EEpGsvCx9QnPgnMOfarQmOW1mcqwj7g6",
+    "name": "Write Access Token",
+    "description": "Create and update experiments, assignments, and events",
+    "scopes": [
+      "experiments:read",
+      "experiments:write",
+      "assignments:read",
+      "assignments:write",
+      "users:read",
+      "users:write",
+      "events:read",
+      "events:write",
+      "analytics:read"
+    ],
+    "rate_limit": 300,
+    "expires_days": 180,
+    "is_active": true
+  },
+  "analytics": {
+    "token": "analytics_zF6mbjnVkLX16wa3tpKZoQukIvNZDICp",
+    "name": "Analytics Token",
+    "description": "Access to analytics data and reporting endpoints",
+    "scopes": [
+      "analytics:read",
+      "analytics:write",
+      "experiments:read",
+      "events:read",
+      "results:read"
+    ],
+    "rate_limit": 200,
+    "expires_days": 90,
+    "is_active": true
+  },
+  "service": {
+    "token": "service_2fIsuvS3OkelYHBCch3GaS_8cY2ijp10eEG7o36l",
+    "name": "Service Token",
+    "description": "Inter-service communication and automated processes",
+    "scopes": [
+      "experiments:read",
+      "experiments:write",
+      "assignments:read",
+      "assignments:write",
+      "events:read",
+      "events:write",
+      "users:read",
+      "users:write"
+    ],
+    "rate_limit": 2000,
+    "expires_days": 365,
+    "is_active": true
+  },
+  "demo": {
+    "token": "demo_OErxSXNX_a5MKMXOtfm86xfc",
+    "name": "Demo Token",
+    "description": "Limited access for demonstrations and testing",
+    "scopes": [
+      "experiments:read",
+      "assignments:read",
+      "analytics:read",
+      "events:read"
+    ],
+    "rate_limit": 100,
+    "expires_days": 30,
+    "is_active": true
+  },
+  "external": {
+    "token": "ext_v5hu0oqO476IaHcmdrNTGZhkp2yCMk5ZALqP",
+    "name": "External API Token",
+    "description": "External partner/integration access",
+    "scopes": [
+      "experiments:read",
+      "assignments:read",
+      "events:write",
+      "results:read"
+    ],
+    "rate_limit": 150,
+    "expires_days": 90,
+    "is_active": true
+  },
+  "monitoring": {
+    "token": "monitor_0lQ8u2SyEaDKtQWGW5eZDBobeZg1",
+    "name": "Monitoring Token",
+    "description": "Health checks and monitoring endpoints",
+    "scopes": [
+      "health:read",
+      "metrics:read",
+      "status:read"
+    ],
+    "rate_limit": 1000,
+    "expires_days": 365,
+    "is_active": true
+  }
+}

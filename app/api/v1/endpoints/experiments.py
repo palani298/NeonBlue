@@ -28,7 +28,7 @@ router = APIRouter()
 async def create_experiment(
     experiment_data: ExperimentCreate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:write"))
 ):
     """Create a new experiment with variants."""
     try:
@@ -90,7 +90,7 @@ async def create_experiment(
 async def get_experiment(
     experiment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:read"))
 ):
     """Get experiment by ID."""
     result = await db.execute(
@@ -116,7 +116,7 @@ async def list_experiments(
     limit: int = 100,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:read"))
 ):
     """List experiments with optional filtering."""
     query = select(Experiment).limit(limit).offset(offset)
@@ -139,7 +139,7 @@ async def update_experiment(
     experiment_id: int,
     update_data: ExperimentUpdate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:write"))
 ):
     """Update experiment details."""
     result = await db.execute(
@@ -174,7 +174,7 @@ async def update_experiment(
 async def activate_experiment(
     experiment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:write"))
 ):
     """Activate an experiment."""
     result = await db.execute(
@@ -209,7 +209,7 @@ async def activate_experiment(
 async def pause_experiment(
     experiment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:write"))
 ):
     """Pause an active experiment."""
     result = await db.execute(
@@ -243,7 +243,7 @@ async def pause_experiment(
 async def delete_experiment(
     experiment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:write"))
 ):
     """Delete an experiment and all its data."""
     result = await db.execute(
@@ -271,7 +271,7 @@ async def delete_experiment(
 async def hard_delete_experiment(
     experiment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:write"))
 ):
     """Hard delete an experiment and all its data (permanent)."""
     result = await db.execute(
@@ -298,7 +298,7 @@ async def hard_delete_experiment(
 async def create_bulk_experiments(
     bulk_data: BulkExperimentCreate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("experiments:write"))
 ):
     """Create multiple experiments using true bulk operations."""
     # Convert Pydantic models to dictionaries

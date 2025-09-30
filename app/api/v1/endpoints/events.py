@@ -28,7 +28,7 @@ async def record_event(
     event_data: EventCreate,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("events:write"))
 ):
     """
     Record an event for an experiment.
@@ -71,7 +71,7 @@ async def record_batch_events(
     batch_data: BatchEventCreate,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("events:write"))
 ):
     """
     Record multiple events using true bulk operations.
@@ -104,7 +104,7 @@ async def record_batch_events(
 async def get_event(
     event_id: str,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("events:read"))
 ):
     """Get event by ID."""
     from app.models.models import Event
@@ -132,7 +132,7 @@ async def list_events(
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("events:read"))
 ):
     """List events with optional filtering."""
     from app.models.models import Event
@@ -158,7 +158,7 @@ async def update_event(
     event_id: str,
     update_data: EventUpdate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("events:write"))
 ):
     """Update event details."""
     from app.models.models import Event
@@ -192,7 +192,7 @@ async def update_event(
 async def delete_event(
     event_id: str,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("events:write"))
 ):
     """Delete an event."""
     from app.models.models import Event

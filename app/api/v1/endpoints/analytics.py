@@ -10,6 +10,7 @@ import clickhouse_connect
 
 from app.core.database import get_db
 from app.core.config import settings
+from app.middleware.auth import auth
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,8 @@ def get_clickhouse_client():
 async def get_experiments_data(
     limit: int = Query(100, description="Number of experiments to return"),
     offset: int = Query(0, description="Number of experiments to skip"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
 ):
     """Get real experiments data from PostgreSQL."""
     try:
@@ -88,7 +90,8 @@ async def get_variants_data(
     experiment_id: Optional[int] = Query(None, description="Filter by experiment ID"),
     limit: int = Query(100, description="Number of variants to return"),
     offset: int = Query(0, description="Number of variants to skip"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
 ):
     """Get real variants data from PostgreSQL."""
     try:
@@ -135,7 +138,8 @@ async def get_assignments_data(
     user_id: Optional[str] = Query(None, description="Filter by user ID"),
     limit: int = Query(100, description="Number of assignments to return"),
     offset: int = Query(0, description="Number of assignments to skip"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
 ):
     """Get real assignments data from PostgreSQL."""
     try:
@@ -196,7 +200,8 @@ async def get_events_data(
     user_id: Optional[str] = Query(None, description="Filter by user ID"),
     event_type: Optional[str] = Query(None, description="Filter by event type"),
     limit: int = Query(100, description="Number of events to return"),
-    offset: int = Query(0, description="Number of events to skip")
+    offset: int = Query(0, description="Number of events to skip"),
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
 ):
     """Get real events data from ClickHouse."""
     try:
@@ -263,7 +268,8 @@ async def get_users_data(
     active_only: bool = Query(True, description="Show only active users"),
     limit: int = Query(100, description="Number of users to return"),
     offset: int = Query(0, description="Number of users to skip"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
 ):
     """Get real users data from PostgreSQL."""
     try:
@@ -306,7 +312,8 @@ async def get_experiment_reports(
     experiment_id: Optional[int] = Query(None, description="Filter by experiment ID"),
     days: int = Query(30, description="Number of days to include"),
     limit: int = Query(100, description="Number of reports to return"),
-    offset: int = Query(0, description="Number of reports to skip")
+    offset: int = Query(0, description="Number of reports to skip"),
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
 ):
     """Get aggregated experiment reports from ClickHouse."""
     try:
@@ -357,7 +364,8 @@ async def get_experiment_reports(
 @router.get("/daily-stats")
 async def get_daily_stats(
     experiment_id: Optional[int] = Query(None, description="Filter by experiment ID"),
-    days: int = Query(7, description="Number of days to include")
+    days: int = Query(7, description="Number of days to include"),
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
 ):
     """Get daily aggregated statistics from ClickHouse."""
     try:
@@ -398,7 +406,9 @@ async def get_daily_stats(
         raise HTTPException(status_code=500, detail="Failed to fetch daily stats")
 
 @router.get("/summary")
-async def get_data_summary():
+async def get_data_summary(
+    token_data: dict = Depends(auth.require_scope("analytics:read"))
+):
     """Get summary statistics from both PostgreSQL and ClickHouse."""
     try:
         # Get PostgreSQL counts

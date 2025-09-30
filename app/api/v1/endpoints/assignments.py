@@ -41,7 +41,7 @@ async def get_assignment(
         description="Force cache refresh"
     ),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:read"))
 ):
     """
     Get or create user's variant assignment for an experiment.
@@ -83,7 +83,7 @@ async def get_assignment(
 async def get_bulk_assignments(
     request: BulkAssignmentRequest,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:read"))
 ):
     """
     Get assignments for one user across multiple experiments.
@@ -117,7 +117,7 @@ async def list_assignments(
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:read"))
 ):
     """List assignments with optional filtering."""
     from app.models.models import Assignment
@@ -140,7 +140,7 @@ async def list_assignments(
 async def get_assignment_by_id(
     assignment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:read"))
 ):
     """Get assignment by ID."""
     from app.models.models import Assignment
@@ -165,7 +165,7 @@ async def update_assignment(
     assignment_id: int,
     update_data: AssignmentUpdate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:write"))
 ):
     """Update assignment details."""
     from app.models.models import Assignment
@@ -199,7 +199,7 @@ async def update_assignment(
 async def delete_assignment(
     assignment_id: int,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:write"))
 ):
     """Delete an assignment."""
     from app.models.models import Assignment
@@ -228,7 +228,7 @@ async def delete_assignment(
 async def create_bulk_assignments(
     bulk_data: BulkAssignmentCreate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:write"))
 ):
     """Create multiple assignments using true bulk operations."""
     # Use bulk operations service
@@ -246,7 +246,7 @@ async def create_bulk_assignments(
 async def update_bulk_assignments(
     bulk_data: BulkAssignmentUpdate,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:write"))
 ):
     """Update multiple assignments using true bulk operations."""
     # Convert Pydantic model to dictionary
@@ -269,7 +269,7 @@ async def update_bulk_assignments(
 async def delete_bulk_assignments(
     bulk_data: BulkAssignmentDelete,
     db: AsyncSession = Depends(get_db),
-    token_data: dict = Depends(auth.verify_token)
+    token_data: dict = Depends(auth.require_scope("assignments:write"))
 ):
     """Delete multiple assignments using true bulk operations."""
     # Use bulk operations service
